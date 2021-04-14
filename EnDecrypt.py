@@ -1,40 +1,48 @@
-from pathlib import WindowsPath
 from PIL import Image
 import numpy as np
-
-r1 = 0
-lamb1 = 3.897
-x = 0
 
 def logistic_f(lamb, x): #logistic生成器，输入lambda和当前状态，返回下一个状态
     x = lamb * x * (1 - x)
     return x
 
-def Encrypt_f(path, lamb, x0): #加解密主函数，path图像路径，存储路径，lamb，x0是加密参数
-    global x,lamb1
-    im = Image.open(path[0])
-    x = x0
+def Encrypt_f(path, lamb, x0): #加密主函数，path图像路径，存储路径，lamb，x0是加密参数
+    im = Image.open(path[0]) #初始化变量
+    x1 = x0
     lamb1 = lamb
-    im = np.array(im)
-    try:
+    x2 = x1
+    x1 = logistic_f(lamb1, x1)
+    x3 = x2
+    x2 = x1
+    x1 = logistic_f(lamb1, x1)
+
+    im = np.array(im) #转化为数组格式
+    try: #获得数组大小
         width, length, height = im.shape[0], im.shape[1], im.shape[2]
     except IndexError:
         height = 1
         width, length = im.shape[0], im.shape[1]
     
-    if height == 1:
-        for i in range(width):
+    if height == 1: #开始处理
+        for i in range(width): #灰度图像模式
             for j in range(length):
-                x = logistic_f(lamb1, x)
-                r1 = int(256 * x) % 256
-                im[i][j] = ((im[i][j] ^ r1) - (height * 8)) % 256
+                x3 = x2
+                x2 = x1
+                x1 = logistic_f(lamb1, x1)
+                r1 = int(256 * x1) % 256
+                r2 = int(256 * x2) % 256
+                r3 = int(256 * x3) % 256
+                im[i][j] = r2 ^ ((im[i][j] ^ r1) - r3 + 8) % 256
     else:
-        for i in range(width):
+        for i in range(width): #彩色图像模式
             for j in range(length):
-                x = logistic_f(lamb1, x)
-                r1 = int(256 * x) % 256
+                x3 = x2
+                x2 = x1
+                x1 = logistic_f(lamb1, x1)
+                r1 = int(256 * x1) % 256
+                r2 = int(256 * x2) % 256
+                r3 = int(256 * x3) % 256
                 for z in range(height):
-                    im[i][j][z] = ((im[i][j] ^ r1) - (height * 8)) % 256
+                    im[i][j][z] = r2 ^ ((im[i][j][z] ^ r1) - r3 + 24) % 256
     im = Image.fromarray(im)
     im.save(path[1])
 
