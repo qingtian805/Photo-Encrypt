@@ -37,9 +37,10 @@ class Utility(Frame): #button功能区
         self.bDecrypt.pack(side="right")
     def __init__(self, master = None):
         Frame.__init__(self, master)
+        self.grid(row=1, column=2)
         self.createWidgets()
 
-class Path(Frame): #路径选择区
+class MessagePath(Frame): #明文路径选择区
     path = StringVar(value="") #路径变量
     def getPath(self): #按钮函数
         self.path = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
@@ -53,7 +54,26 @@ class Path(Frame): #路径选择区
         self.bGetPath.pack(side="left")
     def __init__(self, master = None):
         Frame.__init__(self, master)
+        self.grid(row=2, column=1)
         self.createWidgets()
+
+class EncryptedPath(Frame): #密文路径选择区
+    path = StringVar(value="") #路径变量
+    def getPath(self): #按钮函数
+        self.path = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
+        if self.path != "":
+            self.path = filedialog.askopenfilename()
+    def createWidgets(self):
+        self.ePath = Entry(self, textvariable=self.path) #左侧输入框，绑定路径变量
+        self.ePath.pack(side="left")
+
+        self.bGetPath = Button(self, text="选择文件", command="self.getPath") #右侧按钮
+        self.bGetPath.pack(side="left")
+    def __init__(self, master = None):
+        Frame.__init__(self, master)
+        self.grid(row=2, column=3)
+        self.createWidgets()
+
 
 class Terminal(Frame): #仿终端状态栏
     def createWidgets(self):
@@ -61,9 +81,10 @@ class Terminal(Frame): #仿终端状态栏
         self.textBar.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
+        self.grid(row=2, column=2)
         self.createWidgets()
 
-class ShowPhoto(Frame): #图像显示区
+class MessageShowPhoto(Frame): #明文图像显示区
     def createWidgets(self):
         self.lPhoto = Label(self)
         self.lPhoto.pack()
@@ -72,6 +93,19 @@ class ShowPhoto(Frame): #图像显示区
         self.cPhoto.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
+        self.grid(row=1, column=1)
+        self.createWidgets()
+
+class EncryptedShowPhoto(Frame): #密文图像显示区
+    def createWidgets(self):
+        self.lPhoto = Label(self)
+        self.lPhoto.pack()
+
+        self.cPhoto = Canvas(self)
+        self.cPhoto.pack()
+    def __init__(self, master = None):
+        Frame.__init__(self, master)
+        self.grid(row=1, column=3)
         self.createWidgets()
 
 
