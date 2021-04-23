@@ -1,3 +1,4 @@
+from tkinter.constants import NONE
 from PIL import Image
 import numpy as np
 
@@ -5,8 +6,9 @@ def logistic_f(lamb, x): #logistic生成器，输入lambda和当前状态，返�
     x = lamb * x * (1 - x)
     return x
 
-def Encrypt_f(path, lamb, x0): #加密主函数，path图像路径，存储路径，lamb，x0是加密参数
-    im = Image.open(path[0]) #初始化变量
+def Encrypt_f(lamb, x0, wpath, opath='', im=None): #加密主函数，opath打开图像路径，wpath保存图像路径，存储路径，lamb，x0是加密参数
+    if im == None:
+        im = Image.open(opath) #初始化变量
     x1 = x0
     lamb1 = lamb
     r1 = int(51200 * x1) % 256
@@ -44,10 +46,11 @@ def Encrypt_f(path, lamb, x0): #加密主函数，path图像路径，存储路�
                 for z in range(height):
                     im[i][j][z] = (r2 ^ (im[i][j][z] - r3 + 24) ^ r1) % 256
     im = Image.fromarray(im)
-    im.save(path[1])
+    im.save(wpath)
 
-def Decrypt_f(path, lamb, x0): #解密主函数，path图像路径，lamb，x0是加密参数
-    im = Image.open(path[0]) #初始化变量
+def Decrypt_f(lamb, x0, wpath, opath='', im=None): #解密主函数，opath打开图像路径，wpath保存图像路径，lamb，x0是加密参数
+    if im==None:
+        im = Image.open(opath) #初始化变量
     x1 = x0
     lamb1 = lamb
     r1 = int(51200 * x1) % 256
@@ -86,7 +89,7 @@ def Decrypt_f(path, lamb, x0): #解密主函数，path图像路径，lamb，x0�
                 for z in range(height):
                     im[i][j][z] = ((r2 ^ im[i][j][z] ^ r1) + r3 - 24) % 256
     im = Image.fromarray(im)
-    im.save(path[1])
+    im.save(wpath)
     
 
 #def test_main() 下面是测试代码用的类，这个做标识符
@@ -96,5 +99,7 @@ def Decrypt_f(path, lamb, x0): #解密主函数，path图像路径，lamb，x0�
 #path = ("/home/kevin/lena.tiff", "/home/kevin/lenade.tiff")
 #lamb2 = 3.89775
 #x = 0.3854
-#Encrypt_f(path, lamb2, x)
-#Decrypt_f(path, lamb2, x)
+#Encrypt_f(lamb2, x, "/home/kevin/lena.bmp", "/home/kevin/lena51.bmp")
+#Decrypt_f(lamb2, x, "/home/kevin/lena.bmp", "/home/kevin/lena51.bmp")
+#ph = Image.open("/home/kevin/lena51.bmp")
+#Decrypt_f(wpath="/home/kevin/lena.bmp",im=ph,lamb=lamb2, x0=x)
