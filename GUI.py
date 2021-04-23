@@ -2,7 +2,9 @@
 from EnDecrypt import Decrypt_f, Encrypt_f
 from tkinter import *
 from tkinter import filedialog
+from PIL import Image, ImageTk
 from hashlib import md5
+from zlib import crc32
 
 from numpy import select
 #这是两个临时函数，用于替代加密核心算法
@@ -10,6 +12,8 @@ def Encrypt_f():
     print("Encrypt")
 def Decrypt_f():
     print("Decrypt")
+
+pathOpened = False #这个定义与两个路径选择有关，如果选择了打开路径第二次则为保存路径（标记True）
 
 class Utility(Frame): #button功能区
     varKey = StringVar(value="") #密钥变量
@@ -43,16 +47,20 @@ class Utility(Frame): #button功能区
         self.createWidgets()
 
 class MessagePath(Frame): #明文路径选择区
-    path = StringVar(value="") #路径变量
-    def getPath(self): #按钮函数
-        self.path = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
-        if self.path != "":
-            self.path = filedialog.askopenfilename()
+    selectEpName = StringVar(value="") #路径变量
+    def choose_ep(self): #按钮函数
+        global pathOpened
+        self.selectEpName = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
+        if self.selectEpName != "": #判断用户是否在密文区选择了密文图像
+            if pathOpened:
+                self.selectEpName = filedialog.asksaveasfilename(title="解密图像保存为")
+            else:
+                self.selectEpName = filedialog.askopenfilename(title="上传要加密的图像")
     def createWidgets(self):
-        self.ePath = Entry(self, textvariable=self.path) #左侧输入框，绑定路径变量
+        self.ePath = Entry(self, width=40, textvariable=self.selectEpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
-        self.bGetPath = Button(self, text="选择文件", command="self.getPath") #右侧按钮
+        self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_ep) #右侧按钮
         self.bGetPath.pack(side="left")
     def __init__(self, master = None):
         Frame.__init__(self, master)
@@ -60,16 +68,20 @@ class MessagePath(Frame): #明文路径选择区
         self.createWidgets()
 
 class EncryptedPath(Frame): #密文路径选择区
-    path = StringVar(value="") #路径变量
-    def getPath(self): #按钮函数
-        self.path = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
-        if self.path != "":
-            self.path = filedialog.askopenfilename()
+    selectDpName = StringVar(value="") #路径变量
+    def choose_dp(self): #按钮函数
+        global pathOpened
+        self.selectDpName = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
+        if self.selectDpName != "": #判断用户是否在明文区选择了密文图像
+            if pathOpened:
+                self.selectDpName = filedialog.asksaveasfilename(title="加密图像保存为")
+            else:
+                self.selectDpName = filedialog.askopenfilename(title="上传要解密的图像")
     def createWidgets(self):
-        self.ePath = Entry(self, textvariable=self.path) #左侧输入框，绑定路径变量
+        self.ePath = Entry(self, width=40, textvariable=self.selectDpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
-        self.bGetPath = Button(self, text="选择文件", command="self.getPath") #右侧按钮
+        self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_dp) #右侧按钮
         self.bGetPath.pack(side="left")
     def __init__(self, master = None):
         Frame.__init__(self, master)
@@ -89,27 +101,32 @@ class Terminal(Frame): #仿终端状态栏
         self.createWidgets()
 
 class MessageShowPhoto(Frame): #明文图像显示区
-    def showPhoto(self, path):
-        image = PhotoImage
-        self.cPhoto.create_image()
+    def showPhoto(self, im):
+        im.resize((512.512), Image.ANTIALIAS)
+        photo = ImageTk(im)
+        self.lPhoto.config(image=photo)
     def createWidgets(self):
+        self.lText = Label(self, text="明文图像")
+        self.lText.pack()
+
         self.lPhoto = Label(self)
         self.lPhoto.pack()
-
-        self.cPhoto = Canvas(self)
-        self.cPhoto.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
         self.grid(row=1, column=1) #放置在上左
         self.createWidgets()
 
 class EncryptedShowPhoto(Frame): #密文图像显示区
+    def showPhoto(self, im):
+        im.resize((512.512), Image.ANTIALIAS)
+        photo = ImageTk(im)
+        self.lPhoto.config(image=photo)
     def createWidgets(self):
+        self.lText = Label(self, text="密文图像")
+        self.lText.pack()
+
         self.lPhoto = Label(self)
         self.lPhoto.pack()
-
-        self.cPhoto = Canvas(self)
-        self.cPhoto.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
         self.grid(row=1, column=3) #放置在上右
