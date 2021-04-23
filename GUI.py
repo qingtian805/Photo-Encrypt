@@ -16,8 +16,10 @@ class Utility(Frame): #button功能区
     def eKeyEncrypt(self): #加密按钮指令
         key = self.eKey.get()
         self.bEncrypt.config(command=DISABLED)
+        Terminal.newNotice(notice="正在加密")
         Encrypt_f()
         self.bEncrypt.config(command=self.eKeyEncrypt)
+        Terminal.newNotice(notice="加密成功")
     def eKeyDecrypt(self): #解密按钮指令
         key = self.eKey.get()
         self.bDecrypt.config(command=DISABLED)
@@ -37,7 +39,7 @@ class Utility(Frame): #button功能区
         self.bDecrypt.pack(side="right")
     def __init__(self, master = None):
         Frame.__init__(self, master)
-        self.grid(row=1, column=2)
+        self.grid(row=1, column=2) #放置在上中
         self.createWidgets()
 
 class MessagePath(Frame): #明文路径选择区
@@ -54,7 +56,7 @@ class MessagePath(Frame): #明文路径选择区
         self.bGetPath.pack(side="left")
     def __init__(self, master = None):
         Frame.__init__(self, master)
-        self.grid(row=2, column=1)
+        self.grid(row=2, column=1) #放置在下左
         self.createWidgets()
 
 class EncryptedPath(Frame): #密文路径选择区
@@ -71,20 +73,25 @@ class EncryptedPath(Frame): #密文路径选择区
         self.bGetPath.pack(side="left")
     def __init__(self, master = None):
         Frame.__init__(self, master)
-        self.grid(row=2, column=3)
+        self.grid(row=2, column=3) #放置在下右
         self.createWidgets()
 
 
 class Terminal(Frame): #仿终端状态栏
+    def newNotice(self, notice): #添加新消息
+        self.textBar.insert(notice + "\n")
     def createWidgets(self):
         self.textBar = Text(self, state=DISABLED)
         self.textBar.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
-        self.grid(row=2, column=2)
+        self.grid(row=2, column=2) #放置在下中
         self.createWidgets()
 
 class MessageShowPhoto(Frame): #明文图像显示区
+    def showPhoto(self, path):
+        image = PhotoImage
+        self.cPhoto.create_image()
     def createWidgets(self):
         self.lPhoto = Label(self)
         self.lPhoto.pack()
@@ -93,7 +100,7 @@ class MessageShowPhoto(Frame): #明文图像显示区
         self.cPhoto.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
-        self.grid(row=1, column=1)
+        self.grid(row=1, column=1) #放置在上左
         self.createWidgets()
 
 class EncryptedShowPhoto(Frame): #密文图像显示区
@@ -105,7 +112,7 @@ class EncryptedShowPhoto(Frame): #密文图像显示区
         self.cPhoto.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
-        self.grid(row=1, column=3)
+        self.grid(row=1, column=3) #放置在上右
         self.createWidgets()
 
 
