@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from hashlib import md5
+from datetime import datetime
 
 from numpy import select
 #这是两个临时函数，用于替代加密核心算法
@@ -16,7 +17,9 @@ pathOpened = False #这个定义与两个路径选择有关，如果选择了打
 
 class Terminal(Frame): #仿终端状态栏
     def newNotice(self, notice): #添加新消息
-        self.textBar.insert(notice + "\n")
+        self.textBar.config(state=NORMAL)
+        self.textBar.insert(datetime.now().strftime("%Y-%m-%d %H:%M%S") + notice + "\n")
+        self.textBar.config(state=DISABLED)
     def createWidgets(self):
         self.textBar = Text(self, state=DISABLED)
         self.textBar.pack()
@@ -27,14 +30,14 @@ class Terminal(Frame): #仿终端状态栏
 
 class MessageShowPhoto(Frame): #明文图像显示区
     def showPhoto(self, im):
-        im.resize((512.512), Image.ANTIALIAS)
+        im = im.resize((512.512), Image.ANTIALIAS)
         photo = ImageTk(im)
         self.lPhoto.config(image=photo)
     def createWidgets(self):
         self.lText = Label(self, text="明文图像")
         self.lText.pack()
 
-        self.lPhoto = Label(self)
+        self.lPhoto = Label(self, width=512, height=512)
         self.lPhoto.pack()
     def __init__(self, master = None):
         Frame.__init__(self, master)
@@ -43,14 +46,14 @@ class MessageShowPhoto(Frame): #明文图像显示区
 
 class EncryptedShowPhoto(Frame): #密文图像显示区
     def showPhoto(self, im):
-        im.resize((512.512), Image.ANTIALIAS)
+        im = im.resize((512.512), Image.ANTIALIAS)
         photo = ImageTk(im)
         self.lPhoto.config(image=photo)
     def createWidgets(self):
         self.lText = Label(self, text="密文图像")
         self.lText.pack()
 
-        self.lPhoto = Label(self)
+        self.lPhoto = Label(self, width=512, height=512)
         self.lPhoto.pack()
     def __init__(self, master):
         Frame.__init__(self, master)
@@ -82,6 +85,8 @@ class MessagePath(Frame): #明文路径选择区
 
 class EncryptedPath(Frame): #密文路径选择区
     selectDpName = StringVar(value="") #路径变量
+    def getPath(self):
+        return self.selectDpName.get()
     def choose_dp(self): #按钮函数
         global pathOpened
         self.selectDpName = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
