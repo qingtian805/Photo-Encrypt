@@ -6,7 +6,7 @@ def logistic_f(lamb, x): #logistic生成器，输入lambda和当前状态，返�
     x = lamb * x * (1 - x)
     return x
 
-def Encrypt_f(lamb, x0, wpath, opath='', im=None): #加密主函数，opath打开图像路径，wpath保存图像路径，存储路径，lamb，x0是加密参数
+def Encrypt_f(lamb: float, x0: float, wpath: str, opath='', im=None): #加密主函数，opath打开图像路径，wpath保存图像路径，存储路径，lamb，x0是加密参数
     if im == None:
         im = Image.open(opath) #初始化变量
     x1 = x0
@@ -49,7 +49,7 @@ def Encrypt_f(lamb, x0, wpath, opath='', im=None): #加密主函数，opath打�
     im.save(wpath)
     return im
 
-def Decrypt_f(lamb, x0, wpath, opath='', im=None): #解密主函数，opath打开图像路径，wpath保存图像路径，lamb，x0是加密参数
+def Decrypt_f(lamb: float, x0: float, wpath: str, opath='', im=None): #解密主函数，opath打开图像路径，wpath保存图像路径，lamb，x0是加密参数
     if im==None:
         im = Image.open(opath) #初始化变量
     x1 = x0
