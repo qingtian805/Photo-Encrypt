@@ -29,9 +29,10 @@ class Terminal(Frame): #仿终端状态栏
         self.createWidgets()
 
 class MessageShowPhoto(Frame): #明文图像显示区
-    def showPhoto(self, im):
-        im = im.resize((512.512), Image.ANTIALIAS)
-        photo = ImageTk(im)
+    def showPhoto(self, path: str):
+        self.im = Image.open(path)
+        resizedIm = self.im.resize((512.512), Image.ANTIALIAS)
+        photo = ImageTk(resizedIm)
         self.lPhoto.config(image=photo)
     def createWidgets(self):
         self.lText = Label(self, text="明文图像")
@@ -45,9 +46,10 @@ class MessageShowPhoto(Frame): #明文图像显示区
         self.createWidgets()
 
 class EncryptedShowPhoto(Frame): #密文图像显示区
-    def showPhoto(self, im):
-        im = im.resize((512.512), Image.ANTIALIAS)
-        photo = ImageTk(im)
+    def showPhoto(self, path: str):
+        self.im = Image.open(path)
+        resizedIm = self.im.resize((512.512), Image.ANTIALIAS)
+        photo = ImageTk(resizedIm)
         self.lPhoto.config(image=photo)
     def createWidgets(self):
         self.lText = Label(self, text="密文图像")
@@ -66,20 +68,24 @@ class MessagePath(Frame): #明文路径选择区
         return self.selectEpName.get()
     def choose_ep(self): #按钮函数
         global pathOpened
-        self.selectEpName = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
-        if self.selectEpName != "": #判断用户是否在密文区选择了密文图像
-            if pathOpened:
-                self.selectEpName = filedialog.asksaveasfilename(title="解密图像保存为")
+        if self.ePath.get() != "": #尝试获取用户输入的路径，无则打开路径选择框
+            if pathOpened: #判断用户是否在密文区选择了密文图像
+                self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为"))
             else:
-                self.selectEpName = filedialog.askopenfilename(title="上传要加密的图像")
+                self.selectEpName.set(filedialog.askopenfilename(title="上传要加密的图像"))
+                self.photoBar.showPhoto(self.selectEpName.get())
+        else: #用户输入了路径，获取
+            self.selectEpName.set(self.ePath.get())
+            self.photoBar.showPhoto(self.selectEpName.get())
     def createWidgets(self):
         self.ePath = Entry(self, width=40, textvariable=self.selectEpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
         self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_ep) #右侧按钮
         self.bGetPath.pack(side="left")
-    def __init__(self, master):
+    def __init__(self, master, photoBar: MessageShowPhoto):
         Frame.__init__(self, master)
+        self.photoBar = photoBar
         self.grid(row=2, column=1) #放置在下左
         self.createWidgets()
 
@@ -89,20 +95,24 @@ class EncryptedPath(Frame): #密文路径选择区
         return self.selectDpName.get()
     def choose_dp(self): #按钮函数
         global pathOpened
-        self.selectDpName = self.ePath.get() #尝试获取用户输入的路径，无则打开路径选择框
-        if self.selectDpName != "": #判断用户是否在明文区选择了密文图像
-            if pathOpened:
-                self.selectDpName = filedialog.asksaveasfilename(title="加密图像保存为")
+        if self.ePath.get() != "": #尝试获取用户输入的路径，无则打开路径选择框
+            if pathOpened: #判断用户是否在明文区选择了密文图像
+                self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为"))
             else:
-                self.selectDpName = filedialog.askopenfilename(title="上传要解密的图像")
+                self.selectDpName.set(filedialog.askopenfilename(title="上传要解密的图像"))
+                self.photoBar.showPhoto(self.selectDpName.get())
+        else:
+            self.selectDpName.set(self.ePath.get())
+            self.photoBar.showPhoto(self.selectDpName.get())
     def createWidgets(self):
         self.ePath = Entry(self, width=40, textvariable=self.selectDpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
         self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_dp) #右侧按钮
         self.bGetPath.pack(side="left")
-    def __init__(self, master = None):
+    def __init__(self, master, photoBar: MessageShowPhoto):
         Frame.__init__(self, master)
+        self.photoBar = photoBar
         self.grid(row=2, column=3) #放置在下右
         self.createWidgets()
 
