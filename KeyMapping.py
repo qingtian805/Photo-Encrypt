@@ -1,8 +1,8 @@
 from zlib import crc32
 
 decline = 0xFFFFFFFF
-lamb = 0
-x0 = 0
+lamb = 0.0
+x0 = 0.0
 
 def map(strKey: str):
     global lamb, x0
