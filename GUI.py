@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from EnDecrypt import Decrypt_f, Encrypt_f
+#from EnDecrypt import Decrypt_f, Encrypt_f
 from tkinter import *
 from tkinter import filedialog
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, UnidentifiedImageError
 from hashlib import md5
 from datetime import datetime
 import KeyMapping as km
@@ -16,14 +16,15 @@ def Decrypt_f(lamb, x0, wpath, opath='', im=None):
 
 pathOpened = False #这个定义与两个路径选择有关，如果选择了打开路径第二次则为保存路径（标记True）
 window = Tk() #似乎需要先定义这个后面才能跑……
+photo = PhotoImage()
 
 class Terminal(Frame): #仿终端状态栏
     def newNotice(self, notice): #添加新消息
         self.textBar.config(state=NORMAL)
-        self.textBar.insert(datetime.now().strftime("%Y-%m-%d %H:%M%S") + notice + "\n")
+        self.textBar.insert("end", datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n" + notice + "\n")
         self.textBar.config(state=DISABLED)
     def createWidgets(self):
-        self.textBar = Text(self, state=DISABLED)
+        self.textBar = Text(self, state=DISABLED, width=40, height=5)
         self.textBar.pack()
     def __init__(self, master):
         Frame.__init__(self, master)
@@ -31,22 +32,23 @@ class Terminal(Frame): #仿终端状态栏
         self.createWidgets()
 
 class MessageShowPhoto(Frame): #明文图像显示区
-    def showPhoto(self, path='', im = None):
-        if im == None:
-            try:
-                self.im = Image.open(path)
-            except FileNotFoundError:
-                self.terminal.newNotice("文件不存在，请输入一个正确的文件路径")
-        else:
-            self.im = im
-        resizedIm = self.im.resize((512.512), Image.ANTIALIAS)
-        photo = ImageTk(resizedIm)
-        self.lPhoto.config(image=photo)
+    def showPhoto(self, path: str):
+        global photo
+        try:
+            self.im = Image.open(path)
+            resizedIm = self.im.resize((384,384), Image.ANTIALIAS)
+            resizedIm.show()
+            photo = ImageTk.PhotoImage(resizedIm)
+            self.lPhoto.config(image=photo, width=384, height=384)
+        except FileNotFoundError:
+            self.terminal.newNotice("文件不存在，请输入正确的路径")
+        except UnidentifiedImageError:
+            self.terminal.newNotice("文件不是一个图片，请选择图像文件")
     def createWidgets(self):
         self.lText = Label(self, text="明文图像")
         self.lText.pack()
 
-        self.lPhoto = Label(self, width=512, height=512)
+        self.lPhoto = Label(self, width=46, height=23)
         self.lPhoto.pack()
     def __init__(self, master, terminal: Terminal):
         Frame.__init__(self, master)
@@ -55,22 +57,21 @@ class MessageShowPhoto(Frame): #明文图像显示区
         self.createWidgets()
 
 class EncryptedShowPhoto(Frame): #密文图像显示区
-    def showPhoto(self, path='', im=None):
-        if im == None:
-            try:
-                self.im = Image.open(path)
-            except FileNotFoundError:
-                self.terminal.newNotice("文件不存在，请输入一个正确的文件路径")
-        else:
-            self.im = im
-        resizedIm = self.im.resize((512.512), Image.ANTIALIAS)
-        photo = ImageTk(resizedIm)
+    def showPhoto(self, path: str):
+        try:
+            self.im = Image.open(path)
+            resizedIm = self.im.resize((256,256), Image.ANTIALIAS)
+            photo = ImageTk.PhotoImage(resizedIm)
+        except FileNotFoundError:
+            self.terminal.newNotice("文件不存在，请输入正确的路径")
+        except UnidentifiedImageError:
+            self.terminal.newNotice("文件不是一个图片，请选择图像文件")
         self.lPhoto.config(image=photo)
     def createWidgets(self):
         self.lText = Label(self, text="密文图像")
         self.lText.pack()
 
-        self.lPhoto = Label(self, width=512, height=512)
+        self.lPhoto = Label(self, width=46, height=23)
         self.lPhoto.pack()
     def __init__(self, master, terminal: Terminal):
         Frame.__init__(self, master)
@@ -79,28 +80,32 @@ class EncryptedShowPhoto(Frame): #密文图像显示区
         self.createWidgets()
 
 class MessagePath(Frame): #明文路径选择区
-    selectEpName = StringVar(value='') #路径变量
+    selectEpName = StringVar() #路径变量
     def getPath(self):
         return self.selectEpName.get()
     def choose_ep(self): #按钮函数
         global pathOpened
-        if self.ePath.get() != "": #尝试获取用户输入的路径，无则打开路径选择框
+        if self.ePath.get() == '': #尝试获取用户输入的路径，无则打开路径选择框
             if pathOpened: #判断用户是否在密文区选择了密文图像
                 self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为"))
             else:
                 self.selectEpName.set(filedialog.askopenfilename(title="上传要加密的图像"))
+                self.terminal.newNotice("已选择文件路径")
                 self.photoBar.showPhoto(self.selectEpName.get())
         else: #用户输入了路径，获取
             self.selectEpName.set(self.ePath.get())
+            self.terminal.newNotice("已选择文件路径")
             self.photoBar.showPhoto(self.selectEpName.get())
+        pathOpened = True
     def createWidgets(self):
         self.ePath = Entry(self, width=40, textvariable=self.selectEpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
         self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_ep) #右侧按钮
         self.bGetPath.pack(side="left")
-    def __init__(self, master, photoBar: MessageShowPhoto):
+    def __init__(self, master, terminal: Terminal, photoBar: MessageShowPhoto):
         Frame.__init__(self, master)
+        self.terminal = terminal
         self.photoBar = photoBar
         self.grid(row=2, column=1) #放置在下左
         self.createWidgets()
@@ -111,7 +116,7 @@ class EncryptedPath(Frame): #密文路径选择区
         return self.selectDpName.get()
     def choose_dp(self): #按钮函数
         global pathOpened
-        if self.ePath.get() != "": #尝试获取用户输入的路径，无则打开路径选择框
+        if self.ePath.get() == "": #尝试获取用户输入的路径，无则打开路径选择框
             if pathOpened: #判断用户是否在明文区选择了明文图像
                 self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为"))
             else:
@@ -120,14 +125,16 @@ class EncryptedPath(Frame): #密文路径选择区
         else:
             self.selectDpName.set(self.ePath.get())
             self.photoBar.showPhoto(self.selectDpName.get())
+        pathOpened = True
     def createWidgets(self):
         self.ePath = Entry(self, width=40, textvariable=self.selectDpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
         self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_dp) #右侧按钮
         self.bGetPath.pack(side="left")
-    def __init__(self, master, photoBar: MessageShowPhoto):
+    def __init__(self, master, terminal: Terminal, photoBar: MessageShowPhoto):
         Frame.__init__(self, master)
+        self.terminal = terminal
         self.photoBar = photoBar
         self.grid(row=2, column=3) #放置在下右
         self.createWidgets()
@@ -160,7 +167,7 @@ class Utility(Frame): #button功能区
         self.lKey = Label(self, text="密钥") #显示“密钥”
         self.lKey.pack(side="top")
         
-        self.eKey = Entry(self)
+        self.eKey = Entry(self, width=30)
         self.eKey.pack(side="top") #密钥输入框
 
         self.bEncrypt = Button(self, text="加密", command=self.eKeyEncrypt) #加密按钮
@@ -183,7 +190,7 @@ class Utility(Frame): #button功能区
 mTerminal = Terminal(window)
 mMessageShowPhoto = MessageShowPhoto(window, mTerminal)
 mEncryptedShowPhoto = EncryptedShowPhoto(window, mTerminal)
-mMessagePath = MessagePath(window, mMessageShowPhoto)
-mEncryptedPath = EncryptedPath(window, mEncryptedShowPhoto)
+mMessagePath = MessagePath(window, mTerminal, mMessageShowPhoto)
+mEncryptedPath = EncryptedPath(window, mTerminal, mEncryptedShowPhoto)
 mUtility = Utility(window, mMessagePath, mEncryptedPath, mMessageShowPhoto, mEncryptedShowPhoto, mTerminal)
 window.mainloop()
