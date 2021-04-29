@@ -94,24 +94,37 @@ class MessagePath(Frame): #明文路径选择区
     def choose_ep(self): #按钮函数
         global pathOpened
         if self.ePath.get() == '': #尝试获取用户输入的路径，无则打开路径选择框
-            if pathOpened ^ self.pathOpened: #判断用户是否在密文区选择了密文图像或上次在本类中打开
-                self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为"))
-                self.terminal.newNotice("已选择解密保存路径")
-            else:
-                self.selectEpName.set(filedialog.askopenfilename(title="上传要加密的图像"))
-                self.terminal.newNotice("已选择明文文件路径")
-                self.photoBar.showPhoto(self.selectEpName.get())
-                pathOpened = True
-                self.pathOpened = True
+            self.terminal.newNotice("请输入路径或浏览")
         else: #用户输入了路径，获取
             self.selectEpName.set(self.ePath.get())
-            self.terminal.newNotice("已选择文件路径")
+            if pathOpened ^ self.pathOpened:
+                self.terminal.newNotice("已选择解密保存路径:" + self.selectEpName.get())
+            else:
+                self.terminal.newNotice("已选择明文文件路径:" + self.selectEpName.get())
+            self.photoBar.showPhoto(self.selectEpName.get())
+            pathOpened = True
+            self.pathOpened = True
+    def choose_ep_browser(self):
+        global pathOpened
+        if pathOpened ^ self.pathOpened: #判断用户是否在密文区选择了密文图像或上次在本类中打开
+            self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为"),filetypes  = [("JPG File", ".jpg"),\
+                                                                                                    ("BMP File", ".bmp"),\
+                                                                                                    ("PNG File", ".png"),\
+                                                                                                    ("TIFF File",".tiff"),\
+                                                                                                    ("All Files", ".*")])
+            self.terminal.newNotice("已选择解密保存路径:" + self.selectEpName.get())
+        else:
+            self.selectEpName.set(filedialog.askopenfilename(title="上传要加密的图像"))
+            self.terminal.newNotice("已选择明文文件路径:" + self.selectEpName.get())
             self.photoBar.showPhoto(self.selectEpName.get())
             pathOpened = True
             self.pathOpened = True
     def createWidgets(self):
         self.ePath = Entry(self, width=40, textvariable=self.selectEpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
+
+        self.bBrowser = Button(self, width=5, height=1, text="浏览...", command=self.choose_ep_browser)
+        self.bBrowser.pack(side="left")
 
         self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_ep) #右侧按钮
         self.bGetPath.pack(side="left")
@@ -129,25 +142,38 @@ class EncryptedPath(Frame): #密文路径选择区
         return self.selectDpName.get()
     def choose_dp(self): #按钮函数
         global pathOpened
-        if self.ePath.get() == "": #尝试获取用户输入的路径，无则打开路径选择框
-            if pathOpened ^ self.pathOpened: #判断用户是否在明文区选择了明文图像或上次在本类中打开
-                self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为"))
-                self.terminal.newNotice("已选择加密保存路径")
-            else:
-                self.selectDpName.set(filedialog.askopenfilename(title="上传要解密的图像"))
-                self.terminal.newNotice("已选择密文文件路径")
-                self.photoBar.showPhoto(self.selectDpName.get())
-                pathOpened = True
-                self.pathOpened = True
+        if self.ePath.get() == "": #尝试获取用户输入的路径，无则提醒用户
+            self.terminal.newNotice("请输入路径或浏览选择")
         else: #用户输入了路径，获取
             self.selectDpName.set(self.ePath.get())
-            self.terminal.newNotice("已选择密文文件路径")
+            if pathOpened^ self.pathOpened:
+                self.terminal.newNotice("已选择加密保存路径:" + self.selectDpName.get())
+            else:
+                self.terminal.newNotice("已选择密文文件路径:" + self.selectDpName.get())
+            self.photoBar.showPhoto(self.selectDpName.get())
+            pathOpened = True
+            self.pathOpened = True
+    def choose_dp_browser(self):
+        global pathOpened
+        if pathOpened ^ self.pathOpened: #判断用户是否在明文区选择了明文图像或上次在本类中打开
+            self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为",filetypes  = [("JPG File", ".jpg"),\
+                                                                                                    ("BMP File", ".bmp"),\
+                                                                                                    ("PNG File", ".png"),\
+                                                                                                    ("TIFF File",".tiff"),\
+                                                                                                    ("All Files", ".*")]))
+            self.terminal.newNotice("已选择加密保存路径:" + self.selectDpName.get())
+        else:
+            self.selectDpName.set(filedialog.askopenfilename(title="上传要解密的图像"))
+            self.terminal.newNotice("已选择密文文件路径:" + self.selectDpName.get())
             self.photoBar.showPhoto(self.selectDpName.get())
             pathOpened = True
             self.pathOpened = True
     def createWidgets(self):
         self.ePath = Entry(self, width=40, textvariable=self.selectDpName) #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
+
+        self.bBrowser = Button(self, width=5, height=1, text="浏览...", command=self.choose_dp_browser)
+        self.bBrowser.pack(side="left")
 
         self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_dp) #右侧按钮
         self.bGetPath.pack(side="left")
@@ -211,8 +237,6 @@ class Utility(Frame): #button功能区
         self.terminal = terminal
         self.grid(row=1, column=2) #放置在上中
         self.createWidgets()
-
-
 
 mTerminal = Terminal(window)
 mMessageShowPhoto = MessageShowPhoto(window, mTerminal)
