@@ -46,7 +46,7 @@ def Encrypt_f(lamb: float, x0: float, wpath: str, opath='', im=None): #加密主
                 for z in range(height):
                     im[i][j][z] = (r2 ^ (im[i][j][z] - r3 + 24) ^ r1) % 256
     im = Image.fromarray(im)
-    im.save(wpath)
+    im.save(wpath, quality = 100)
     return im
 
 def Decrypt_f(lamb: float, x0: float, wpath: str, opath='', im=None): #解密主函数，opath打开图像路径，wpath保存图像路径，lamb，x0是加密参数
@@ -90,7 +90,7 @@ def Decrypt_f(lamb: float, x0: float, wpath: str, opath='', im=None): #解密主
                 for z in range(height):
                     im[i][j][z] = ((r2 ^ im[i][j][z] ^ r1) + r3 - 24) % 256
     im = Image.fromarray(im)
-    im.save(wpath)
+    im.save(wpath, quality = 100)
     return im
     
 
