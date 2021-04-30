@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#from EnDecrypt import Decrypt_f, Encrypt_f
+from EnDecrypt import Decrypt_f, Encrypt_f
 from tkinter import *
 from tkinter import filedialog
 from PIL import Image, ImageTk, UnidentifiedImageError
@@ -9,12 +9,12 @@ import KeyMapping as km
 
 from numpy import select
 #这是两个临时函数，用于替代加密核心算法
-def Encrypt_f(lamb, x0, wpath, opath='', im=None): 
-    print("Encrypt")
-    return im
-def Decrypt_f(lamb, x0, wpath, opath='', im=None):
-    print("Decrypt")
-    return im
+#def Encrypt_f(lamb, x0, wpath, opath='', im=None): 
+#    print("Encrypt")
+#    return im
+#def Decrypt_f(lamb, x0, wpath, opath='', im=None):
+#    print("Decrypt")
+#    return im
 
 pathOpened = False #这个定义与两个路径选择有关，如果选择了打开路径第二次则为保存路径（标记True）
 window = Tk() #似乎需要先定义这个后面才能跑……
