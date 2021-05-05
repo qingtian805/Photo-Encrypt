@@ -156,8 +156,7 @@ class EncryptedPath(Frame): #密文路径选择区
     def choose_dp_browser(self):
         global pathOpened
         if pathOpened ^ self.pathOpened: #判断用户是否在明文区选择了明文图像或上次在本类中打开
-            self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为",filetypes  = [("JPG File", ".jpg"),\
-                                                                                                    ("BMP File", ".bmp"),\
+            self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为",filetypes  = [("BMP File", ".bmp"),\
                                                                                                     ("PNG File", ".png"),\
                                                                                                     ("TIFF File",".tiff"),\
                                                                                                     ("All Files", ".*")]))
