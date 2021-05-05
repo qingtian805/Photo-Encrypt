@@ -107,11 +107,11 @@ class MessagePath(Frame): #明文路径选择区
     def choose_ep_browser(self):
         global pathOpened
         if pathOpened ^ self.pathOpened: #判断用户是否在密文区选择了密文图像或上次在本类中打开
-            self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为"),filetypes  = [("JPG File", ".jpg"),\
+            self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为",filetypes  = [("JPG File", ".jpg"),\
                                                                                                     ("BMP File", ".bmp"),\
                                                                                                     ("PNG File", ".png"),\
                                                                                                     ("TIFF File",".tiff"),\
-                                                                                                    ("All Files", ".*")])
+                                                                                                    ("All Files", ".*")]))
             self.terminal.newNotice("已选择解密保存路径:" + self.selectEpName.get())
         else:
             self.selectEpName.set(filedialog.askopenfilename(title="上传要加密的图像"))
@@ -146,7 +146,7 @@ class EncryptedPath(Frame): #密文路径选择区
             self.terminal.newNotice("请输入路径或浏览选择")
         else: #用户输入了路径，获取
             self.selectDpName.set(self.ePath.get())
-            if pathOpened^ self.pathOpened:
+            if pathOpened ^ self.pathOpened:
                 self.terminal.newNotice("已选择加密保存路径:" + self.selectDpName.get())
             else:
                 self.terminal.newNotice("已选择密文文件路径:" + self.selectDpName.get())
@@ -238,6 +238,7 @@ class Utility(Frame): #button功能区
         self.grid(row=1, column=2) #放置在上中
         self.createWidgets()
 
+window.title("图像处理")
 mTerminal = Terminal(window)
 mMessageShowPhoto = MessageShowPhoto(window, mTerminal)
 mEncryptedShowPhoto = EncryptedShowPhoto(window, mTerminal)
