@@ -3,7 +3,6 @@ from EnDecrypt import Decrypt_f, Encrypt_f
 from tkinter import *
 from tkinter import filedialog
 from PIL import Image, ImageTk, UnidentifiedImageError
-from hashlib import md5
 from datetime import datetime
 import KeyMapping as km
 
@@ -107,7 +106,7 @@ class MessagePath(Frame): #明文路径选择区
     def choose_ep_browser(self):
         global pathOpened
         if pathOpened ^ self.pathOpened: #判断用户是否在密文区选择了密文图像或上次在本类中打开
-            self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为",filetypes  = [("JPG File", ".jpg"),\
+            self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为",defaultextension = ".jpg",filetypes  = [("JPG File", ".jpg"),\
                                                                                                     ("BMP File", ".bmp"),\
                                                                                                     ("PNG File", ".png"),\
                                                                                                     ("TIFF File",".tiff"),\
@@ -156,7 +155,7 @@ class EncryptedPath(Frame): #密文路径选择区
     def choose_dp_browser(self):
         global pathOpened
         if pathOpened ^ self.pathOpened: #判断用户是否在明文区选择了明文图像或上次在本类中打开
-            self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为",filetypes  = [("BMP File", ".bmp"),\
+            self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为",defaultextension = ".png",filetypes  = [("BMP File", ".bmp"),\
                                                                                                     ("PNG File", ".png"),\
                                                                                                     ("TIFF File",".tiff"),\
                                                                                                     ("All Files", ".*")]))
@@ -237,7 +236,7 @@ class Utility(Frame): #button功能区
         self.grid(row=1, column=2) #放置在上中
         self.createWidgets()
 
-window.title("图像处理")
+window.title("基于混沌算法的图像加解密")
 mTerminal = Terminal(window)
 mMessageShowPhoto = MessageShowPhoto(window, mTerminal)
 mEncryptedShowPhoto = EncryptedShowPhoto(window, mTerminal)
