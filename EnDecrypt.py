@@ -42,6 +42,7 @@ def Encrypt_f(lamb: float, x0: float, opath: str, wpath: str): #加密主函数�
                     im[i][j][z] = (r2 ^ (im[i][j][z] - r3 + 8) ^ r1) % 256
     im = Image.fromarray(im)
     im.save(wpath, quality = 100)
+    im.close()
 
 def Decrypt_f(lamb: float, x0: float, opath: str, wpath: str): #解密主函数，opath打开图像路径，wpath保存图像路径，lamb，x0是加密参数
     im = Image.open(opath) #初始化变量
@@ -79,6 +80,7 @@ def Decrypt_f(lamb: float, x0: float, opath: str, wpath: str): #解密主函数�
                     im[i][j][z] = ((r2 ^ im[i][j][z] ^ r1) + r3 - 8) % 256
     im = Image.fromarray(im)
     im.save(wpath, quality = 100)
+    im.close()
     
 
 #def test_main() 下面是测试代码用的类，这个做标识符

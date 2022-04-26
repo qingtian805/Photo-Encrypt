@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#from EnDecrypt import Decrypt_f, Encrypt_f
+from EnDecrypt import Decrypt_f, Encrypt_f
 from tkinter import *
 from tkinter import filedialog
 from PIL import Image, ImageTk, UnidentifiedImageError
@@ -8,51 +8,57 @@ import KeyMapping as km
 
 from numpy import select
 #这是两个临时函数，用于替代加密核心算法
-def Encrypt_f(lamb, x0, wpath, opath='', im=None): 
-    print("Encrypt")
-    return im
-def Decrypt_f(lamb, x0, wpath, opath='', im=None):
-    print("Decrypt")
-    return im
+#def Encrypt_f(lamb, x0, opath, wpath): 
+#    print("Encrypt")
+#def Decrypt_f(lamb, x0, opath, wpath):
+#    print("Decrypt")
 
-pathOpened = False #这个定义与两个路径选择有关，如果选择了打开路径第二次则为保存路径（标记True）
 window = Tk() #似乎需要先定义这个后面才能跑……
 photoMessage = PhotoImage()
 photoEncrypted = PhotoImage()
 
+#两个列表，存储可以加密、解密的文件类型
+MESSAGE_FILE_TYPES =  [("JPG File", ".jpg"),("BMP File", ".bmp"),("PNG File", ".png"),("TIFF File",".tiff"),("All Files", ".*")]
+ENCRYPTED_FILE_TYPES = [("BMP File", ".bmp"),("PNG File", ".png"),("TIFF File",".tiff"),("All Files", ".*")]
+
 class Terminal(Frame): #仿终端状态栏
     def newNotice(self, notice): #添加新消息
         self.textBar.config(state=NORMAL)
-        self.textBar.insert("end", datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n" + notice + "\n")
+        self.textBar.insert("0.0", datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n" + notice + "\n")
         self.textBar.config(state=DISABLED)
+
     def createWidgets(self):
         self.textBar = Text(self, state=DISABLED, width=40, height=5)
         self.textBar.pack()
+
     def __init__(self, master):
         Frame.__init__(self, master)
         self.grid(row=2, column=2) #放置在下中
         self.createWidgets()
 
 class MessageShowPhoto(Frame): #明文图像显示区
-    def showPhoto(self, path: str = '', im: Image = None):
+    def showPhoto(self, im):#将图像显示图像
         global photoMessage
-        try:
-            if im == None:
-                self.im = Image.open(path)
-            else: self.im = im
-            resizedIm = self.im.resize((384,384), Image.ANTIALIAS)
-            photoMessage = ImageTk.PhotoImage(resizedIm)
-            self.lPhoto.config(image=photoMessage, width=384, height=384)
-        except FileNotFoundError:
-            self.terminal.newNotice("文件不存在，请输入正确的路径")
-        except UnidentifiedImageError:
-            self.terminal.newNotice("文件不是一个图片，请选择图像文件")
+        width = im.size[0]
+        height = im.size[1]
+        if(width >= height):
+            #若图像宽大于等于高
+            ratio = height / width
+            resizedIm = im.resize((384, int(384 * ratio)), Image.ANTIALIAS)
+        else:
+            #若图像高大于宽
+            ratio = width / height
+            resizedIm = im.resize((int(384 * ratio), 384), Image.ANTIALIAS)
+        photoMessage = ImageTk.PhotoImage(resizedIm)#转换为TK可以显示的格式
+        self.lPhoto.config(image=photoMessage, width=384, height=384)#设置TK以显示图像
+
     def createWidgets(self):
         self.lText = Label(self, text="明文图像")
         self.lText.pack()
 
         self.lPhoto = Label(self, width=46, height=23)
         self.lPhoto.pack()
+
     def __init__(self, master, terminal: Terminal):
         Frame.__init__(self, master)
         self.terminal = terminal
@@ -60,25 +66,30 @@ class MessageShowPhoto(Frame): #明文图像显示区
         self.createWidgets()
 
 class EncryptedShowPhoto(Frame): #密文图像显示区
-    def showPhoto(self, path: str = '', im: Image = None):
+    def showPhoto(self, im):#将图像显示图像
         global photoEncrypted
-        try:
-            if im == None:
-                self.im = Image.open(path)
-            else: self.im = im
-            resizedIm = self.im.resize((384,384), Image.ANTIALIAS)
-            photoEncrypted = ImageTk.PhotoImage(resizedIm)
-            self.lPhoto.config(image=photoEncrypted, width=384, height=384)
-        except FileNotFoundError:
-            self.terminal.newNotice("文件不存在，请输入正确的路径")
-        except UnidentifiedImageError:
-            self.terminal.newNotice("文件不是一个图片，请选择图像文件")
+        self.im = im
+        width = self.im.size[0]
+        height = self.im.size[1]
+        if(width >= height):
+            #若图像宽大于等于高
+            ratio = height / width
+            resizedIm = self.im.resize((384, int(384 * ratio)), Image.ANTIALIAS)
+        else:
+            #若图像高大于宽
+            ratio = width / height
+            resizedIm = self.im.resize((int(384 * ratio), 384), Image.ANTIALIAS)
+        photoEncrypted = ImageTk.PhotoImage(resizedIm)#转换为TK可以显示的格式
+        self.lPhoto.config(image=photoEncrypted, width=384, height=384)#设置TK以显示图像
+        self.im.close()#关闭图像文件
+
     def createWidgets(self):
         self.lText = Label(self, text="密文图像")
         self.lText.pack()
 
         self.lPhoto = Label(self, width=46, height=23)
         self.lPhoto.pack()
+
     def __init__(self, master, terminal: Terminal):
         Frame.__init__(self, master)
         self.terminal = terminal
@@ -86,47 +97,68 @@ class EncryptedShowPhoto(Frame): #密文图像显示区
         self.createWidgets()
 
 class MessagePath(Frame): #明文路径选择区
-    selectEpName = StringVar() #路径变量
-    pathOpened = False
+    selectEpName = StringVar(value="") #路径变量
+    exist = False #用于指示路径是否准备就绪
+
     def getPath(self):
         return self.selectEpName.get()
+
     def choose_ep(self): #按钮函数
-        global pathOpened
-        if self.ePath.get() == '': #尝试获取用户输入的路径，无则打开路径选择框
-            self.terminal.newNotice("请输入路径或浏览")
-        else: #用户输入了路径，获取
-            self.selectEpName.set(self.ePath.get())
-            if pathOpened ^ self.pathOpened:
-                self.terminal.newNotice("已选择解密保存路径:" + self.selectEpName.get())
-            else:
-                self.terminal.newNotice("已选择明文文件路径:" + self.selectEpName.get())
-            self.photoBar.showPhoto(self.selectEpName.get())
-            pathOpened = True
-            self.pathOpened = True
-    def choose_ep_browser(self):
-        global pathOpened
-        if pathOpened ^ self.pathOpened: #判断用户是否在密文区选择了密文图像或上次在本类中打开
-            self.selectEpName.set(filedialog.asksaveasfilename(title="解密图像保存为",defaultextension = ".jpg",filetypes  = [("JPG File", ".jpg"),\
-                                                                                                    ("BMP File", ".bmp"),\
-                                                                                                    ("PNG File", ".png"),\
-                                                                                                    ("TIFF File",".tiff"),\
-                                                                                                    ("All Files", ".*")]))
-            self.terminal.newNotice("已选择解密保存路径:" + self.selectEpName.get())
-        else:
-            self.selectEpName.set(filedialog.askopenfilename(title="上传要加密的图像"))
-            self.terminal.newNotice("已选择明文文件路径:" + self.selectEpName.get())
-            self.photoBar.showPhoto(self.selectEpName.get())
-            pathOpened = True
-            self.pathOpened = True
+        path = self.ePath.get()#获取用户输入
+
+        if path == '': #无路径，提示用户输入路径并返回
+            self.terminal.newNotice("请选择明文路径")
+            return
+        
+        #获取到了路径
+        try:
+            #尝试打开图像文件，如果成功则将图像传至显示后关闭fp
+            im = Image.open(path)
+            self.photoBar.showPhoto(im)
+            im.close()
+            #设置标识与反馈
+            self.exist = True #设置文件存在标识
+            self.terminal.newNotice("设置明文文件路径:" + path) #在终端显示提示
+
+        #异常处理
+        except FileNotFoundError:
+            #若文件不存在，设置标识
+            self.exist = False
+            self.terminal.newNotice("设置明文文件路径:" + path)
+        except UnidentifiedImageError:
+            #文件类型错误，无法打开
+            self.exist = False
+            self.terminal.newNotice("未支持的图像类型")
+        except:
+            self.exist = False
+            self.terminal.newNotice("未知错误，请检查程序权限以及文件路径")
+        
+    def choose_ep_open(self):
+        #弹出对话窗让用户选择路径
+        path = filedialog.askopenfilename(title="选择明文文件",defaultextension = ".png",filetypes  = MESSAGE_FILE_TYPES)
+        #将文件名传入Entry
+        self.selectEpName.set(path)
+        #后续交由choose_ep()函数处理
+        self.choose_ep()
+    
+    def choose_ep_save(self):
+        #弹出对话窗让用户选择路径
+        path = filedialog.asksaveasfilename(title="明文保存位置",defaultextension = ".png",filetypes  = MESSAGE_FILE_TYPES)
+        #将文件名传入Entry
+        self.selectEpName.set(path)
+        #后续交由choose_ep()函数处理
+        self.choose_ep()
+
     def createWidgets(self):
-        self.ePath = Entry(self, width=40, textvariable=self.selectEpName) #左侧输入框，绑定路径变量
+        self.ePath = Entry(self, width=40, textvariable=self.selectEpName, state="disable") #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
-        self.bBrowser = Button(self, width=5, height=1, text="浏览...", command=self.choose_ep_browser)
+        self.bBrowser = Button(self, width=5, height=1, text="打开...", command=self.choose_ep_open)
         self.bBrowser.pack(side="left")
 
-        self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_ep) #右侧按钮
+        self.bGetPath = Button(self, width=6, height=1, text="保存到...", command=self.choose_ep_save) #右侧按钮
         self.bGetPath.pack(side="left")
+
     def __init__(self, master, terminal: Terminal, photoBar: MessageShowPhoto):
         Frame.__init__(self, master)
         self.terminal = terminal
@@ -136,44 +168,65 @@ class MessagePath(Frame): #明文路径选择区
 
 class EncryptedPath(Frame): #密文路径选择区
     selectDpName = StringVar(value="") #路径变量
-    pathOpened = False
+    exist = False #用于指示路径是否已经准备就绪
+
     def getPath(self):
         return self.selectDpName.get()
+
     def choose_dp(self): #按钮函数
-        global pathOpened
-        if self.ePath.get() == "": #尝试获取用户输入的路径，无则提醒用户
-            self.terminal.newNotice("请输入路径或浏览选择")
-        else: #用户输入了路径，获取
-            self.selectDpName.set(self.ePath.get())
-            if pathOpened ^ self.pathOpened:
-                self.terminal.newNotice("已选择加密保存路径:" + self.selectDpName.get())
-            else:
-                self.terminal.newNotice("已选择密文文件路径:" + self.selectDpName.get())
-            self.photoBar.showPhoto(self.selectDpName.get())
-            pathOpened = True
-            self.pathOpened = True
-    def choose_dp_browser(self):
-        global pathOpened
-        if pathOpened ^ self.pathOpened: #判断用户是否在明文区选择了明文图像或上次在本类中打开
-            self.selectDpName.set(filedialog.asksaveasfilename(title="加密图像保存为",defaultextension = ".png",filetypes  = [("BMP File", ".bmp"),\
-                                                                                                    ("PNG File", ".png"),\
-                                                                                                    ("TIFF File",".tiff"),\
-                                                                                                    ("All Files", ".*")]))
-            self.terminal.newNotice("已选择加密保存路径:" + self.selectDpName.get())
-        else:
-            self.selectDpName.set(filedialog.askopenfilename(title="上传要解密的图像"))
-            self.terminal.newNotice("已选择密文文件路径:" + self.selectDpName.get())
-            self.photoBar.showPhoto(self.selectDpName.get())
-            pathOpened = True
-            self.pathOpened = True
+        path = self.ePath.get()#获取用户输入
+
+        if path == '': #无路径，提示用户输入路径并返回
+            self.terminal.newNotice("请选择密文路径")
+            return
+        
+        #获得到路径
+        try:
+            #尝试打开图像文件，如果成功则将图像传至显示后关闭fp
+            im = Image.open(path)
+            self.photoBar.showPhoto(im)
+            im.close()
+            #设置标识与反馈
+            self.exist = True
+            self.terminal.newNotice("设置密文文件路径:" + path) #在终端显示提示
+
+        #异常处理
+        except FileNotFoundError:
+            #若文件不存在，设置标识
+            self.exist = False
+            self.terminal.newNotice("设置密文文件路径:" + path)
+        except UnidentifiedImageError:
+            #文件类型错误，无法打开
+            self.exist = False
+            self.terminal.newNotice("未支持的图像类型")
+        except:
+            self.exist = False
+            self.terminal.newNotice("未知错误，请检查程序权限以及文件路径")
+
+    def choose_dp_open(self):
+        #弹出对话窗让用户选择路径
+        path = filedialog.askopenfilename(title="选择密文文件",defaultextension = ".png",filetypes  = ENCRYPTED_FILE_TYPES)
+        #将文件名传入Entry
+        self.selectDpName.set(path)
+        #后续交由choose_ep()函数处理
+        self.choose_dp()
+    
+    def choose_dp_save(self):
+        #弹出对话窗让用户选择路径
+        path = filedialog.asksaveasfilename(title="密文保存位置",defaultextension = ".png",filetypes  = ENCRYPTED_FILE_TYPES)
+        #将文件名传入Entry
+        self.selectDpName.set(path)
+        #后续交由choose_ep()函数处理
+        self.choose_dp()
+    
     def createWidgets(self):
-        self.ePath = Entry(self, width=40, textvariable=self.selectDpName) #左侧输入框，绑定路径变量
+        self.ePath = Entry(self, width=40, textvariable=self.selectDpName, state="disable") #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
-        self.bBrowser = Button(self, width=5, height=1, text="浏览...", command=self.choose_dp_browser)
+        self.bBrowser = Button(self, width=5, height=1, text="打开...", command=self.choose_dp_open)
         self.bBrowser.pack(side="left")
 
-        self.bGetPath = Button(self, width=6, height=1, text="选择文件", command=self.choose_dp) #右侧按钮
+        self.bGetPath = Button(self, width=6, height=1, text="保存到...", command=self.choose_dp_save) #右侧按钮
         self.bGetPath.pack(side="left")
     def __init__(self, master, terminal: Terminal, photoBar: EncryptedShowPhoto):
         Frame.__init__(self, master)
@@ -184,36 +237,86 @@ class EncryptedPath(Frame): #密文路径选择区
 
 class Utility(Frame): #button功能区
     varKey = StringVar(value="") #密钥变量
+
     def eKeyEncrypt(self): #加密按钮指令
-        global pathOpened
         self.bEncrypt.config(command=DISABLED) #设置按钮不可用，防止二次加密
+
         key = self.eKey.get() #获得密钥
-        im = self.mPhoto.im #获得明文图像
-        DpPath = self.ePath.getPath() #获取密文路径
-        self.terminal.newNotice("正在加密") #显示状态信息
+        MpPath = self.mPath.getPath() #获取明文路径
+        EpPath = self.ePath.getPath() #获取密文路径
+
+        #检查明文路径
+        if not self.mPath.exist:
+            self.terminal.newNotice("错误！请设置正确的明文路径")
+            self.bEncrypt.config(command=self.eKeyEncrypt)
+            return
+        #检查密文路径
+        if len(EpPath) < 1 or EpPath.isspace():
+            self.terminal.newNotice("错误！请设置正确的密文路径")
+            self.bEncrypt.config(command=self.eKeyEncrypt)
+            return
+        #检查密钥
+        if len(key) < 1:
+            self.terminal.newNotice("错误！请输入密钥")
+            self.bEncrypt.config(command=self.eKeyEncrypt)
+            return
+
+        #开始加密
+        self.terminal.newNotice("正在加密...") #显示状态信息
+        
         km.map(key) #映射产生加密参数
-        im = Encrypt_f(km.getLamb(), km.getx0(),DpPath,im=im)
-        self.ePhoto.showPhoto(im=im) #向密文图像显示投送密文Image
-        self.bEncrypt.config(command=self.eKeyEncrypt)
-        self.terminal.newNotice(notice="加密成功")
-        pathOpened = False
-        self.mPath.pathOpened = False
-        self.ePath.pathOpened = False
+        Encrypt_f(km.getLamb(), km.getx0(), MpPath, EpPath)
+
+        #尝试打开密文
+        try:
+            im = Image.open(EpPath)
+            self.ePhoto.showPhoto(im) #向密文图像显示投送密文Image
+            im.close()
+
+            self.bEncrypt.config(command=self.eKeyEncrypt)
+            self.terminal.newNotice("加密成功")
+        except:
+            self.terminal.newNotice("未知错误，密文未能写入。请检查软件权限和密文路径")
+
     def eKeyDecrypt(self): #解密按钮指令
-        global pathOpened
         self.bDecrypt.config(command=DISABLED) #设置按钮不可用，防止二次解密
+
         key = self.eKey.get() #获取密钥
-        im = self.ePhoto.im #获得密文图像
-        EpPath = self.mPath.getPath() #获得明文路径
-        self.terminal.newNotice("正在解密") #显示状态信息
+        MpPath = self.mPath.getPath() #获得明文路径
+        EpPath = self.ePath.getPath() #获得密文路径
+
+        #检查密文路径
+        if not self.ePath.exist:
+            self.terminal.newNotice("错误！请设置正确的密文路径")
+            self.bDecrypt.config(command=self.eKeyDecrypt)
+            return
+        #检查明文路径
+        if len(MpPath) < 1 or MpPath.isspace():
+            self.terminal.newNotice("错误！请设置正确的明文路径")
+            self.bDecrypt.config(command=self.eKeyDecrypt)
+            return
+        #检查密钥
+        if len(key) < 1:
+            self.terminal.newNotice("错误！请输入密钥")
+            self.bDecrypt.config(command=self.eKeyDecrypt)
+            return
+
+        #开始解密
+        self.terminal.newNotice("正在解密...") #显示状态信息
+
         km.map(key) #映射产生解密参数
-        im = Decrypt_f(km.getLamb(), km.getx0(), EpPath, im=im)
-        self.mPhoto.showPhoto(im=im)
-        self.terminal.newNotice("解密成功")
-        self.bDecrypt.config(command=self.eKeyDecrypt)
-        pathOpened = False
-        self.mPath.pathOpened = False
-        self.ePath.pathOpened = False
+        im = Decrypt_f(km.getLamb(), km.getx0(), EpPath, MpPath)
+
+        try:
+            im = Image.open(MpPath)
+            self.mPhoto.showPhoto(im)
+            im.close()
+            
+            self.bDecrypt.config(command=self.eKeyDecrypt)
+            self.terminal.newNotice("解密成功")
+        except:
+            self.terminal.newNotice("未知错误，明文未能写入。请检查软件权限和明文路径")
+
     def createWidgets(self):
         self.lKey = Label(self, text="密钥") #显示“密钥”
         self.lKey.pack(side="top")
