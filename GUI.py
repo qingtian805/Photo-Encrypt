@@ -52,12 +52,17 @@ class MessageShowPhoto(Frame): #明文图像显示区
         photoMessage = ImageTk.PhotoImage(resizedIm)#转换为TK可以显示的格式
         self.lPhoto.config(image=photoMessage, width=384, height=384)#设置TK以显示图像
 
+    def clearPhoto(self): #清除图像
+        self.lPhoto.destroy()
+        self.lPhoto = Label(self, width=46, height=20)
+        self.lPhoto.pack(side="top")
+
     def createWidgets(self):
         self.lText = Label(self, text="明文图像")
-        self.lText.pack()
+        self.lText.pack(side="bottom")
 
-        self.lPhoto = Label(self, width=46, height=23)
-        self.lPhoto.pack()
+        self.lPhoto = Label(self, width=46, height=20)
+        self.lPhoto.pack(side="top")
 
     def __init__(self, master, terminal: Terminal):
         Frame.__init__(self, master)
@@ -83,12 +88,17 @@ class EncryptedShowPhoto(Frame): #密文图像显示区
         self.lPhoto.config(image=photoEncrypted, width=384, height=384)#设置TK以显示图像
         self.im.close()#关闭图像文件
 
+    def clearPhoto(self): #清除图像
+        self.lPhoto.destroy()
+        self.lPhoto = Label(self, width=46, height=20)
+        self.lPhoto.pack(side="top")
+
     def createWidgets(self):
         self.lText = Label(self, text="密文图像")
-        self.lText.pack()
+        self.lText.pack(side="bottom")
 
-        self.lPhoto = Label(self, width=46, height=23)
-        self.lPhoto.pack()
+        self.lPhoto = Label(self, width=46, height=20)
+        self.lPhoto.pack(side="top")
 
     def __init__(self, master, terminal: Terminal):
         Frame.__init__(self, master)
@@ -102,6 +112,19 @@ class MessagePath(Frame): #明文路径选择区
 
     def getPath(self):
         return self.selectEpName.get()
+
+    def lock(self):
+        #将所有按钮设为不可用
+        self.bOpen.config(state=DISABLED)
+        self.bSave.config(state=DISABLED)
+
+    def reset(self):
+        #重置变量
+        self.exist = False
+        self.selectEpName.set("")
+        #重置按钮状态
+        self.bOpen.config(state=NORMAL)
+        self.bSave.config(state=NORMAL)
 
     def choose_ep(self): #按钮函数
         path = self.ePath.get()#获取用户输入
@@ -153,11 +176,11 @@ class MessagePath(Frame): #明文路径选择区
         self.ePath = Entry(self, width=40, textvariable=self.selectEpName, state="disable") #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
-        self.bBrowser = Button(self, width=5, height=1, text="打开...", command=self.choose_ep_open)
-        self.bBrowser.pack(side="left")
+        self.bOpen = Button(self, width=5, height=1, text="打开...", command=self.choose_ep_open)
+        self.bOpen.pack(side="left")
 
-        self.bGetPath = Button(self, width=6, height=1, text="保存到...", command=self.choose_ep_save) #右侧按钮
-        self.bGetPath.pack(side="left")
+        self.bSave = Button(self, width=6, height=1, text="保存到...", command=self.choose_ep_save) #右侧按钮
+        self.bSave.pack(side="left")
 
     def __init__(self, master, terminal: Terminal, photoBar: MessageShowPhoto):
         Frame.__init__(self, master)
@@ -172,6 +195,19 @@ class EncryptedPath(Frame): #密文路径选择区
 
     def getPath(self):
         return self.selectDpName.get()
+
+    def lock(self):
+        #将所有按钮设为不可用
+        self.bOpen.config(state=DISABLED)
+        self.bSave.config(state=DISABLED)
+    
+    def reset(self):
+        #重置变量
+        self.exist = False
+        self.selectDpName.set("")
+        #重置按钮状态
+        self.bOpen.config(state=NORMAL)
+        self.bSave.config(state=NORMAL)
 
     def choose_dp(self): #按钮函数
         path = self.ePath.get()#获取用户输入
@@ -223,11 +259,12 @@ class EncryptedPath(Frame): #密文路径选择区
         self.ePath = Entry(self, width=40, textvariable=self.selectDpName, state="disable") #左侧输入框，绑定路径变量
         self.ePath.pack(side="left")
 
-        self.bBrowser = Button(self, width=5, height=1, text="打开...", command=self.choose_dp_open)
-        self.bBrowser.pack(side="left")
+        self.bOpen = Button(self, width=5, height=1, text="打开...", command=self.choose_dp_open)
+        self.bOpen.pack(side="left")
 
-        self.bGetPath = Button(self, width=6, height=1, text="保存到...", command=self.choose_dp_save) #右侧按钮
-        self.bGetPath.pack(side="left")
+        self.bSave = Button(self, width=6, height=1, text="保存到...", command=self.choose_dp_save) #右侧按钮
+        self.bSave.pack(side="left")
+        
     def __init__(self, master, terminal: Terminal, photoBar: EncryptedShowPhoto):
         Frame.__init__(self, master)
         self.terminal = terminal
@@ -238,9 +275,26 @@ class EncryptedPath(Frame): #密文路径选择区
 class Utility(Frame): #button功能区
     varKey = StringVar(value="") #密钥变量
 
-    def eKeyEncrypt(self): #加密按钮指令
-        self.bEncrypt.config(command=DISABLED) #设置按钮不可用，防止二次加密
+    def lock(self):
+        self.bDecrypt.config(state=DISABLED)
+        self.bEncrypt.config(state=DISABLED)
 
+    def reset(self):
+        #重设按钮状态
+        self.bDecrypt.config(state=NORMAL)
+        self.bEncrypt.config(state=NORMAL)
+        self.bReset.config(state=DISABLED)
+        #将Key设置为空
+        self.varKey.set("")
+    
+    def reset_all(self):
+        self.reset()
+        self.ePath.reset()
+        self.mPath.reset()
+        self.ePhoto.clearPhoto()
+        self.mPhoto.clearPhoto()
+
+    def eKeyEncrypt(self): #加密按钮指令
         key = self.eKey.get() #获得密钥
         MpPath = self.mPath.getPath() #获取明文路径
         EpPath = self.ePath.getPath() #获取密文路径
@@ -248,21 +302,22 @@ class Utility(Frame): #button功能区
         #检查明文路径
         if not self.mPath.exist:
             self.terminal.newNotice("错误！请设置正确的明文路径")
-            self.bEncrypt.config(command=self.eKeyEncrypt)
             return
         #检查密文路径
         if len(EpPath) < 1 or EpPath.isspace():
             self.terminal.newNotice("错误！请设置正确的密文路径")
-            self.bEncrypt.config(command=self.eKeyEncrypt)
             return
         #检查密钥
         if len(key) < 1:
             self.terminal.newNotice("错误！请输入密钥")
-            self.bEncrypt.config(command=self.eKeyEncrypt)
             return
 
         #开始加密
         self.terminal.newNotice("正在加密...") #显示状态信息
+        self.lock()
+        self.mPath.lock()
+        self.ePath.lock()
+        self.master.update()#更新tkinter
         
         km.map(key) #映射产生加密参数
         Encrypt_f(km.getLamb(), km.getx0(), MpPath, EpPath)
@@ -273,14 +328,14 @@ class Utility(Frame): #button功能区
             self.ePhoto.showPhoto(im) #向密文图像显示投送密文Image
             im.close()
 
-            self.bEncrypt.config(command=self.eKeyEncrypt)
             self.terminal.newNotice("加密成功")
         except:
             self.terminal.newNotice("未知错误，密文未能写入。请检查软件权限和密文路径")
 
-    def eKeyDecrypt(self): #解密按钮指令
-        self.bDecrypt.config(command=DISABLED) #设置按钮不可用，防止二次解密
+        #开放reset
+        self.bReset.config(state=NORMAL)
 
+    def eKeyDecrypt(self): #解密按钮指令
         key = self.eKey.get() #获取密钥
         MpPath = self.mPath.getPath() #获得明文路径
         EpPath = self.ePath.getPath() #获得密文路径
@@ -288,34 +343,37 @@ class Utility(Frame): #button功能区
         #检查密文路径
         if not self.ePath.exist:
             self.terminal.newNotice("错误！请设置正确的密文路径")
-            self.bDecrypt.config(command=self.eKeyDecrypt)
             return
         #检查明文路径
         if len(MpPath) < 1 or MpPath.isspace():
             self.terminal.newNotice("错误！请设置正确的明文路径")
-            self.bDecrypt.config(command=self.eKeyDecrypt)
             return
         #检查密钥
         if len(key) < 1:
             self.terminal.newNotice("错误！请输入密钥")
-            self.bDecrypt.config(command=self.eKeyDecrypt)
             return
 
         #开始解密
         self.terminal.newNotice("正在解密...") #显示状态信息
+        self.lock()
+        self.mPath.lock()
+        self.ePath.lock()
+        self.master.update()#更新tkinter
 
         km.map(key) #映射产生解密参数
-        im = Decrypt_f(km.getLamb(), km.getx0(), EpPath, MpPath)
+        Decrypt_f(km.getLamb(), km.getx0(), EpPath, MpPath)
 
         try:
             im = Image.open(MpPath)
             self.mPhoto.showPhoto(im)
             im.close()
             
-            self.bDecrypt.config(command=self.eKeyDecrypt)
             self.terminal.newNotice("解密成功")
         except:
             self.terminal.newNotice("未知错误，明文未能写入。请检查软件权限和明文路径")
+
+        #开放reset
+        self.bReset.config(state=NORMAL)
 
     def createWidgets(self):
         self.lKey = Label(self, text="密钥") #显示“密钥”
@@ -329,6 +387,10 @@ class Utility(Frame): #button功能区
 
         self.bDecrypt = Button(self, text="解密", command=self.eKeyDecrypt) #解密按钮
         self.bDecrypt.pack(side="right")
+        
+        self.bReset = Button(self, text="重置", command=self.reset_all, state=DISABLED) #重置按钮
+        self.bReset.pack(side="bottom")
+
     def __init__(self, master, mPath: MessagePath, ePath: EncryptedPath, mPhoto: MessageShowPhoto, ePhoto: EncryptedShowPhoto, terminal: Terminal):
         Frame.__init__(self, master)
         self.mPath = mPath
